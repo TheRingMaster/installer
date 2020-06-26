@@ -65,12 +65,12 @@ dialog() {
 start_menu() {
 	# Info about anarchy
 	dialog --clear \
-			--title "About Anarchy Installer" \
-			--msgbox "\nAnarchy is an installer for the Arch Linux distribution, not\
+			--title 'About Anarchy Installer' \
+			--msgbox '\nAnarchy is an installer for the Arch Linux distribution, not\
 			a distribution based on Arch. Because you are installing Arch, you can\
 			(and should) read the Arch Wiki (wiki.archlinux.org) before reporting any\
 			post-installation issues. If an error occurs during the installation,\
-			use the command 'cat /tmp/anarchy.log | nc termbin.com 9999' in the\
+			use the command "cat /tmp/anarchy.log | nc termbin.com 9999" in the\
 			terminal and share the returned URL along with a description of the issue\
 			on our Gitlab. You can talk to the developers and Anarchy users in our\
 			Telegram group, which is also our only official support group.\n\n\
@@ -79,17 +79,23 @@ start_menu() {
 			Gitlab: https://gitlab.com/anarchyinstaller/installer\n\
 			Telegram: https://t.me/anarchy_installer\n\n\
 
-			Thanks for using Anarchy!" 18 80
+			Thanks for using Anarchy!' 18 80
 
 	# Ask if user wants to update
-	if dialog --title "Update" \
-			--yesno "\nWould you like to update Anarchy?" 16 80; then
+	if dialog --title 'Update' \
+			--yesno '\nWould you like to update Anarchy?' 16 80; then
 		if ! is_online; then
 			wifi-menu -o
 		fi
 
 		# Download run the update script
-		curl -s https://gitlab.com/anarchyinstaller/installer/-/raw/master/airootfs/usr/bin/anarchy-update | sh
+		tmp_dir="$(mktemp -d)"
+		curl https://gitlab.com/anarchyinstaller/installer/-/raw/master/airootfs/usr/bin/anarchy-update \
+				-O "${tmp_dir}"/anarchy-update
+		chmod +x "${tmp_dir}"/anarchy-update
+		./"${tmp_dir}"/anarchy-update &
+	else
+		echo 'When you'\''re finished, run "anarchy" to start the installation'
 	fi
 }
 
