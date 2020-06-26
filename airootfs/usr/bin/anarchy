@@ -61,10 +61,41 @@ dialog() {
 	fi
 }
 
+# Starts on bootup
+start_menu() {
+	# Info about anarchy
+	dialog --clear \
+			--title "About Anarchy Installer" \
+			--msgbox "\nAnarchy is an installer for the Arch Linux distribution, not\
+			a distribution based on Arch. Because you are installing Arch, you can\
+			(and should) read the Arch Wiki (wiki.archlinux.org) before reporting any\
+			post-installation issues. If an error occurs during the installation,\
+			use the command 'cat /tmp/anarchy.log | nc termbin.com 9999' in the\
+			terminal and share the returned URL along with a description of the issue\
+			on our Gitlab. You can talk to the developers and Anarchy users in our\
+			Telegram group, which is also our only official support group.\n\n\
+
+			Website: https://anarchyinstaller.org\n\
+			Gitlab: https://gitlab.com/anarchyinstaller/installer\n\
+			Telegram: https://t.me/anarchy_installer\n\n\
+
+			Thanks for using Anarchy!" 18 80
+
+	# Ask if user wants to update
+	if dialog --title "Update" \
+			--yesno "\nWould you like to update Anarchy?" 16 80; then
+		if ! is_online; then
+			wifi-menu -o
+		fi
+
+		# Download run the update script
+		curl -s https://gitlab.com/anarchyinstaller/installer/-/raw/master/airootfs/usr/bin/anarchy-update | sh
+	fi
+}
+
 usage() {
 	echo 'Usage: anarchy [option]'
 	echo '    -h | --help      Show this message'
-	echo '    -k | --keys      Update pacman keys'
 	echo '    -u | --update    Update Anarchy'
 	echo '    -v | --version   Show the current Anarchy version'
 }
@@ -74,42 +105,10 @@ if [ $# -eq 0 ]; then
 	main
 else
 	case "$1" in
-		-h|--help) usage; exit 0 ;;
-		-k|--keys) if is_online; then
-			echo 'Updating pacman keys'
-			pacman-db-upgrade || { echo 'Failed to update database'; exit 1; }
-			pacman-key --init || { echo 'Failed to initialize keys'; exit 1; }
-			pacman-key --populate archlinux || \
-					{ echo 'Failed to populate keystore'; exit 1; }
-			pacman-key --refresh-keys || \
-					{ echo 'Failed to refresh keys'; exit 1; }
-			echo 'Finished updating keys'
-		else
-			# Assume that user is using wifi to connect, since ethernet
-			# would already be connected
-			wifi-menu -o
-		fi
-		;;
-		-u|--update) if is_online; then
-			tmp_dir="$(mktemp -d)"
-			echo 'Updating Anarchy'
-			git clone https://gitlab.com/anarchyinstaller/installer \
-					"${tmp_dir}" || { echo 'Failed to clone git repo'; exit 1; }
-			cp -f "${tmp_dir}"/airootfs/usr/bin/* /usr/bin/ || exit 1
-			cp -fr "${tmp_dir}"/airootfs/etc/* /etc/ || exit 1
-			cp -f "${tmp_dir}"/airootfs/root/* /root/ || exit 1
-			cp -f "${tmp_dir}"/airootfs/usr/lib/anarchy/* /usr/lib/anarchy/ || \
-					exit 1
-			cp -fr "${tmp_dir}"/airootfs/usr/share/anarchy/* \
-					/usr/share/anarchy/ || exit 1
-			echo 'Finished updating Anarchy'
-			echo 'To start the installation run the "anarchy" command'
-			echo 'To return to the main menu run the "start" command'
-		else
-			wifi-menu -o
-		fi
-		;;
-		-v|--version) echo "Anarchy Installer v${VERSION}"; exit 0 ;;
+		-h|--help) usage ;;
+		-u|--update) anarchy-update ;;
+		-v|--version) echo "Anarchy Installer v${VERSION}" ;;
+		-s|--startup) start_menu ;;
 		*) usage; exit 1 ;;
 	esac
 fi
