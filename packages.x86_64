@@ -1,4 +1,3 @@
-# Archiso
 arch-install-scripts
 b43-fwcutter
 broadcom-wl
@@ -15,6 +14,7 @@ dmraid
 dnsmasq
 dnsutils
 dosfstools
+efibootmgr
 elinks
 ethtool
 exfat-utils
@@ -24,7 +24,6 @@ gnu-netcat
 gpm
 gptfdisk
 grml-zsh-config
-grub
 hdparm
 ipw2100-fw
 ipw2200-fw
@@ -34,8 +33,8 @@ jfsutils
 lftp
 linux-atm
 linux-firmware
-lsscsi
 lvm2
+lsscsi
 man-db
 man-pages
 mc
@@ -43,12 +42,11 @@ mdadm
 mtools
 nano
 ndisc6
-netctl
 nfs-utils
 nilfs-utils
 nmap
 ntfs-3g
-ntp
+nvme-cli
 openconnect
 openssh
 openvpn
@@ -57,22 +55,21 @@ parted
 partimage
 ppp
 pptpclient
-refind
 reiserfsprogs
 rp-pppoe
+reflector
 rsync
 sdparm
 sg3_utils
 smartmontools
 sudo
+systemd-resolvconf
 tcpdump
 testdisk
 usb_modeswitch
 usbutils
-vi
 vim-minimal
 vpnc
-wget
 wireless-regdb
 wireless_tools
 wpa_supplicant
@@ -83,7 +80,6 @@ xl2tpd
 # Anarchy
 acpi
 git
-networkmanager
 pacman-contrib
 terminus-font
 zsh-syntax-highlighting
