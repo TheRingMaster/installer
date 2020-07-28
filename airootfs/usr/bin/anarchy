@@ -6,6 +6,74 @@ VERSION='1.2.1'
 . libanarchy.sh
 . /etc/anarchy.conf
 
+# Starts on bootup
+start_menu() {
+	# Only run if the start menu hasn't been run already
+	if [ ! -f /root/.anarchy_updated ]; then
+		# Info about anarchy
+		dialog --clear \
+			--title 'About Anarchy Installer' \
+			--msgbox '\nAnarchy is an installer for the Arch Linux distribution, not\
+			a distribution based on Arch. Because you are installing Arch, you can\
+			(and should) read the Arch Wiki (wiki.archlinux.org) before reporting any\
+			post-installation issues. If an error occurs during the installation,\
+			use the command "cat /tmp/anarchy.log | nc termbin.com 9999" in the\
+			terminal and share the returned URL along with a description of the issue\
+			on our Gitlab. You can talk to the developers and Anarchy users in our\
+			Telegram group, which is also our only official support group.\n\n\
+
+			Website: https://anarchyinstaller.org\n\
+			Gitlab: https://gitlab.com/anarchyinstaller/installer\n\
+			Telegram: https://t.me/anarchy_installer\n\n\
+
+			Thanks for using Anarchy!' 18 80
+
+		# Ask if user wants to update
+		if dialog --title 'Update' \
+				--yesno '\nWould you like to update Anarchy?' 16 80; then
+			if ! is_online; then
+				wifi-menu -o
+			fi
+
+			# Download run the update script
+			tmp_dir="$(mktemp -d)"
+			curl https://gitlab.com/anarchyinstaller/installer/-/raw/master/airootfs/usr/bin/anarchy-update \
+					-O "${tmp_dir}"/anarchy-update
+			chmod +x "${tmp_dir}"/anarchy-update
+			./"${tmp_dir}"/anarchy-update &
+		else
+			echo 'When you'\''re finished, run "anarchy" to start the installation'
+		fi
+
+		# Prevent a start menu loop
+		touch /root/.anarchy_updated
+	fi
+}
+
+dialog() {
+	# If terminal height is more than 25 lines add extra info at the top
+	if "${screen_h}" ; then
+		if "${LAPTOP}" ; then
+			# Show battery charge next to Anarchy heading
+			backtitle="${backtitle} $(acpi)"
+		fi
+
+		# op_title is the current menu title
+		/usr/bin/dialog --colors --backtitle "${backtitle}" \
+				--title "${op_title}" "$@"
+	else
+		# title is the main title (Anarchy)
+		/usr/bin/dialog --colors --title "${title}" "$@"
+	fi
+}
+
+usage() {
+	echo 'Usage: anarchy [option]'
+	echo '    -h | --help      Show this message'
+	echo '    -u | --update    Update Anarchy'
+	echo '    -v | --version   Show the current Anarchy version'
+}
+
 init() {
 	# Prevents the installer from exiting if Ctrl-C is pressed
 	trap '' 2
@@ -28,6 +96,7 @@ main() {
 		exit 1
 	fi
 
+	start_menu
 	set_keys
 	update_mirrors
 	check_connection
@@ -44,68 +113,6 @@ main() {
 	reboot_system
 }
 
-dialog() {
-	# If terminal height is more than 25 lines add extra info at the top
-	if "${screen_h}" ; then
-		if "${LAPTOP}" ; then
-			# Show battery charge next to Anarchy heading
-			backtitle="${backtitle} $(acpi)"
-		fi
-
-		# op_title is the current menu title
-		/usr/bin/dialog --colors --backtitle "${backtitle}" \
-				--title "${op_title}" "$@"
-	else
-		# title is the main title (Anarchy)
-		/usr/bin/dialog --colors --title "${title}" "$@"
-	fi
-}
-
-# Starts on bootup
-start_menu() {
-	# Info about anarchy
-	dialog --clear \
-			--title 'About Anarchy Installer' \
-			--msgbox '\nAnarchy is an installer for the Arch Linux distribution, not\
-			a distribution based on Arch. Because you are installing Arch, you can\
-			(and should) read the Arch Wiki (wiki.archlinux.org) before reporting any\
-			post-installation issues. If an error occurs during the installation,\
-			use the command "cat /tmp/anarchy.log | nc termbin.com 9999" in the\
-			terminal and share the returned URL along with a description of the issue\
-			on our Gitlab. You can talk to the developers and Anarchy users in our\
-			Telegram group, which is also our only official support group.\n\n\
-
-			Website: https://anarchyinstaller.org\n\
-			Gitlab: https://gitlab.com/anarchyinstaller/installer\n\
-			Telegram: https://t.me/anarchy_installer\n\n\
-
-			Thanks for using Anarchy!' 18 80
-
-	# Ask if user wants to update
-	if dialog --title 'Update' \
-			--yesno '\nWould you like to update Anarchy?' 16 80; then
-		if ! is_online; then
-			wifi-menu -o
-		fi
-
-		# Download run the update script
-		tmp_dir="$(mktemp -d)"
-		curl https://gitlab.com/anarchyinstaller/installer/-/raw/master/airootfs/usr/bin/anarchy-update \
-				-O "${tmp_dir}"/anarchy-update
-		chmod +x "${tmp_dir}"/anarchy-update
-		./"${tmp_dir}"/anarchy-update &
-	else
-		echo 'When you'\''re finished, run "anarchy" to start the installation'
-	fi
-}
-
-usage() {
-	echo 'Usage: anarchy [option]'
-	echo '    -h | --help      Show this message'
-	echo '    -u | --update    Update Anarchy'
-	echo '    -v | --version   Show the current Anarchy version'
-}
-
 if [ $# -eq 0 ]; then
 	init
 	main
@@ -114,7 +121,6 @@ else
 		-h|--help) usage ;;
 		-u|--update) anarchy-update ;;
 		-v|--version) echo "Anarchy Installer v${VERSION}" ;;
-		-s|--startup) start_menu ;;
 		*) usage; exit 1 ;;
 	esac
 fi
