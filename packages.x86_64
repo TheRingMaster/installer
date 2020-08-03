@@ -1,3 +1,4 @@
+amd-ucode
 arch-install-scripts
 b43-fwcutter
 broadcom-wl
@@ -43,6 +44,7 @@ mkinitcpio
 mtools
 nano
 ndisc6
+networkmanager
 nfs-utils
 nilfs-utils
 nmap
